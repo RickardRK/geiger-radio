@@ -1,0 +1,152 @@
+// ==================== 主 Worker ====================
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Range',
+      'Access-Control-Expose-Headers': 'Content-Length, Content-Range, Content-Type',
+    };
+
+    // ---------- 安全校验（防白嫖） ----------
+    const origin = request.headers.get('Origin') || '';
+    if (url.pathname.startsWith('/audio') || url.pathname === '/messages') {
+      if (origin !== '' && 
+          !origin.includes('geigerechosite126.dpdns.org') && 
+          !origin.includes('pages.dev') && 
+          !origin.includes('localhost') && 
+          !origin.includes('127.0.0.1')) {
+        return new Response('Forbidden', { status: 403, headers: corsHeaders });
+      }
+    }
+
+    // ---------- 0. 留言板 ----------
+    if (url.pathname === '/messages') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { headers: corsHeaders });
+      }
+      if (request.method === 'POST') {
+        try {
+          const body = await request.json();
+          let text = String(body.text || '').trim().slice(0, 80);
+          if (!text) {
+            return new Response(JSON.stringify({ error: 'empty' }), {
+              status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          const id = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+          const key = 'msg_' + id;
+          const data = { id, text, time: Date.now() };
+          await env.MESSAGES.put(key, JSON.stringify(data), { expirationTtl: 86400 });
+          return new Response(JSON.stringify({ ok: true, id, text }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        } catch (e) {
+          return new Response(JSON.stringify({ error: e.message }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+      if (request.method === 'GET') {
+        try {
+          const listed = await env.MESSAGES.list({ prefix: 'msg_', limit: 100 });
+          const sortedKeys = listed.keys.map(k => k.name).sort();
+          const recentKeys = sortedKeys.slice(-20);
+          const values = await Promise.all(recentKeys.map(k => env.MESSAGES.get(k)));
+          const messages = values.filter(v => v).map(v => { try { return JSON.parse(v); } catch(e) { return null; } }).filter(Boolean);
+          
+          // 【核心修改】给留言 GET 请求加上 60 秒的边缘缓存
+          // 这样 1000 个人同时看，Cloudflare 只会去读一次 KV，极大节省额度
+          return new Response(JSON.stringify(messages), {
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=60, s-maxage=60' // 👈 关键缓存头
+            }
+          });
+        } catch (e) {
+          return new Response(JSON.stringify({ error: e.message }), {
+            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+    }
+
+    // ---------- 1. 音频代理 ----------
+    if (url.pathname === '/audio') {
+      const targetUrl = url.searchParams.get('url');
+      if (!targetUrl) return new Response('Missing url', { status: 400 });
+
+      try {
+        const response = await fetch(targetUrl, {
+          headers: {
+            'Referer': 'https://music.163.com/',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Range': request.headers.get('Range') || 'bytes=0-',
+          },
+          cf: {
+            cacheEverything: true,
+            cacheTtl: 1800 
+          }
+        });
+
+        const newHeaders = new Headers(response.headers);
+        for (const [k, v] of Object.entries(corsHeaders)) {
+          newHeaders.set(k, v);
+        }
+        
+        newHeaders.set('Access-Control-Allow-Origin', '*');
+        newHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        newHeaders.set('Access-Control-Expose-Headers', 'Content-Length, Content-Range, Content-Type');
+        
+        // 【新增】音频流也强制加上浏览器缓存，减少重复请求
+        newHeaders.set('Cache-Control', 'public, max-age=1800'); 
+        
+        newHeaders.delete('Content-Security-Policy');
+        newHeaders.delete('Content-Disposition');
+        
+        return new Response(response.body, { status: response.status, headers: newHeaders });
+           
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), {
+          status: 500, headers: corsHeaders
+        });
+      }
+    }
+
+    // ---------- 2. GD 音乐台 API 代理 ----------
+    if (request.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders });
+    }
+    const apiUrl = 'https://music-api.gdstudio.xyz/api.php' + url.search;
+    try {
+      const response = await fetch(apiUrl, { 
+        method: request.method, 
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+      
+      if (!response.ok) {
+        return new Response('[]', { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const text = await response.text();
+      
+      let jsonData;
+      try {
+        jsonData = JSON.parse(text);
+      } catch (e) {
+        return new Response('[]', { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      return new Response(JSON.stringify(jsonData), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      return new Response('[]', { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+  }
+};
