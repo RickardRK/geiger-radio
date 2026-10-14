@@ -1,4 +1,4 @@
-const CACHE_NAME = 'geiger-echo-v4.2';
+const CACHE_NAME = 'geiger-echo-v7.0';
 const CORE_ASSETS = [
   '/',
   '/index.html',
@@ -25,8 +25,10 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 请求拦截：网络优先，失败时回退到缓存
 self.addEventListener('fetch', (event) => {
+  // 【核心修复】只拦截 GET 请求，POST 请求直接放行，不进入缓存逻辑
+  if (event.request.method !== 'GET') return;
+
   // 只处理同源请求，外部 API（比如你的 Worker）不缓存
   const url = new URL(event.request.url);
   if (url.origin !== location.origin) {

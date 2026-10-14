@@ -1060,6 +1060,125 @@
       box-shadow: 0 4px 15px rgba(0, 210, 255, 0.5);
     }
 	
+	    /* ============== 彩蛋：World.execute(me); 系统覆写模式 ============== */
+    body.execute-mode {
+      --bg-black: #0a0000;
+      --panel-bg: #140505;
+      --crt-green: #ff2222; /* 全局主色变红 */
+      --crt-green-dim: #5a0000;
+      --paper-white: #ffcccc;
+      --c-border: #3d0a0a;
+      --c-border-light: #661111;
+    }
+
+    body.execute-mode .radio-console {
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.98), 0 0 40px rgba(255, 34, 34, 0.4);
+      border-color: #ff2222;
+    }
+
+    /* 1. PPT 界面全黑 + 红色大字 */
+    body.execute-mode .viewport-screen {
+      background-image: none !important;
+      background-color: #000 !important;
+    }
+    body.execute-mode .no-info-overlay {
+      background: #000;
+      color: #ff2222;
+      opacity: 1 !important;
+      font-size: 3rem;
+      letter-spacing: 15px;
+      text-shadow: 0 0 15px #ff2222, 0 0 30px #ff2222;
+      animation: hardFlicker 0.1s infinite alternate;
+    }
+
+    /* 2. 点云加速扫描线 */
+    body.execute-mode .viewport-box::before {
+      animation: sweepRadar 1.2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+      box-shadow: 0 4px 20px rgba(255, 34, 34, 0.8);
+    }
+
+    /* 改为只对播放器视窗进行切割抖动 */
+    @keyframes slice-glitch {
+      0% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translateX(0); }
+      20% { clip-path: polygon(0 0, 100% 0, 100% 20%, 0 20%); transform: translateX(-15px); }
+      40% { clip-path: polygon(0 30%, 100% 30%, 100% 70%, 0 70%); transform: translateX(15px); }
+      60% { clip-path: polygon(0 80%, 100% 80%, 100% 100%, 0 100%); transform: translateX(-5px); }
+      100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translateX(0); }
+    }
+    /* 将故障动画通用化，任何加上该类的 UI 面板均可发生切片撕裂 */
+    body.execute-mode .page-glitch {
+      animation: slice-glitch 0.15s linear infinite;
+      overflow: hidden;
+    }
+
+    /* 大框的横向切片撕裂（模仿数字信号丢失） */
+    @keyframes console-slice {
+      0% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+      15% { clip-path: inset(10% 0 60% 0); transform: translateX(-25px); }
+      30% { clip-path: inset(45% 0 25% 0); transform: translateX(25px); }
+      45% { clip-path: inset(75% 0 5% 0); transform: translateX(-15px); }
+      60% { clip-path: inset(0 0 0 0); transform: translateX(0); }
+    }
+    body.execute-mode .radio-console.page-glitch {
+      animation: console-slice 0.15s linear infinite;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.98), 0 0 60px rgba(255, 34, 34, 0.8); /* 增强红色光晕 */
+      border-color: #ff2222;
+    }
+
+    /* ============== 彩蛋：醉酒模式 (Drunk Mode) ============== */
+    body.crazy-mode {
+      animation: crazy-bg-flicker 0.1s infinite alternate;
+    }
+
+    body.crazy-mode .radio-console {
+      transform-origin: center center;
+      will-change: transform;
+      box-shadow: 0 0 40px #ff00ff, 0 0 80px #00ffff, inset 0 0 20px #ff00ff !important;
+      border-color: #ff00ff !important;
+      /* 取消 CSS 动画，改由 JS 每帧驱动 transform */
+      animation: none;
+    }
+
+    /* 内部面板也跟着抖 */
+    body.crazy-mode .panel-box,
+    body.crazy-mode .viewport-box,
+    body.crazy-mode .tuner-band {
+      animation: crazy-inner-shake 0.15s infinite alternate;
+    }
+
+    /* 文字颜色狂变 */
+    body.crazy-mode .station-title,
+    body.crazy-mode .panel-box h3,
+    body.crazy-mode .log-time,
+    body.crazy-mode .log-msg {
+      animation: crazy-text-color 0.2s infinite alternate;
+      text-shadow: 0 0 10px currentColor;
+    }
+
+
+
+    /* 黑胶唱片式匀速旋转（3s 一圈） */
+    @keyframes crazy-vinyl {
+      0%   { rotate: 0deg; }
+      100% { rotate: 360deg; }
+    }
+
+    @keyframes crazy-inner-shake {
+      0%   { transform: skew(1deg)  scale(1.01); }
+      100% { transform: skew(-1deg) scale(0.99); }
+    }
+
+    @keyframes crazy-bg-flicker {
+      0%   { background-color: var(--bg-black); }
+      100% { background-color: #1a0a1a; }
+    }
+
+    @keyframes crazy-text-color {
+      0%   { color: #ff00ff; }
+      50%  { color: #00ffff; }
+      100% { color: #ffff00; }
+    }
+	
   </style>
 </head>
 <body>
@@ -1121,7 +1240,7 @@
           <!-- 留言输入行 -->
           <div class="msg-input-row">
             <input type="text" id="messageInput" class="msg-input"
-                   placeholder=" 留言 /help以查询更多..." maxlength="80"
+                   placeholder=" 留言暂时禁用 /help以查询更多..." maxlength="80"
                    onkeydown="if(event.key==='Enter'){event.preventDefault();sendMessage();}">
             <button class="msg-send-btn" id="msgSendBtn" onclick="sendMessage()">SEND</button>
           </div>
@@ -1232,6 +1351,180 @@
   </div>
 
   <script>
+  
+      /* =======================================================================
+       API 单源引擎（Vercel Meting）
+       ======================================================================= */
+      const API_SOURCES = [
+        {
+          name: '自建Meting',
+          proxy: 'https://worker.site126.dpdns.org',
+          path: '/api',
+          titleField: 'title',
+          artistField: 'author'
+        }
+      ];
+
+    // 【通用】从多个源尝试搜索，返回 { source, list }
+    async function fetchSearchWithFallback(keyword, timeoutMs = 8000) {
+      const errors = [];
+      for (const source of API_SOURCES) {
+        try {
+          const url = `${source.proxy}${source.path}?server=netease&type=search&id=${encodeURIComponent(keyword)}`;
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+          const res = await fetch(url, { signal: controller.signal });
+          clearTimeout(timer);
+
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            return { source, list: data };
+          }
+          throw new Error('返回空数组');
+        } catch (err) {
+          console.warn(`[${source.name}] 请求失败:`, err.message);
+          errors.push(`${source.name}: ${err.message}`);
+          // 继续尝试下一个源
+        }
+      }
+      throw new Error('所有 API 源均不可用：' + errors.join(' | '));
+    }
+
+    function parseSongInfo(song, source) {
+      const title = song[source.titleField] || song.title || song.name || '未知歌曲';
+      let artistRaw = song[source.artistField] || song.author || song.artist || '未知歌手';
+      const artist = Array.isArray(artistRaw) ? artistRaw.join('/') : artistRaw;
+      // 直接返回原始音频链接，让浏览器自己去请求网易云CDN，或者让Vercel自己去处理音频代理。
+      return { title, artist, url: song.url };
+    }
+  
+      // 【核心新增】通过 Worker 获取真实的网易云 CDN 音频地址
+    async function getRealAudioUrl(metingApiUrl) {
+        if (!metingApiUrl) return null;
+        
+        // 判断是否是 Meting 的 API 接口（type=url）
+        if (metingApiUrl.includes('/api?') && metingApiUrl.includes('type=url')) {
+            try {
+                // 替换为 Worker 地址，让 Worker 加上 API KEY 去请求
+                const workerUrl = metingApiUrl.replace('https://api.site126.dpdns.org', 'https://worker.site126.dpdns.org');
+                console.log('正在通过 Worker 获取真实音频地址:', workerUrl);
+                
+                const res = await fetch(workerUrl);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                
+                const json = await res.json();
+                // Meting API 通常返回数组或直接对象，提取 url 字段
+                if (json && json.url) return json.url;
+                if (Array.isArray(json) && json.length > 0 && json[0].url) return json[0].url;
+                
+                throw new Error('未找到 url 字段');
+            } catch (e) {
+                console.error('获取真实音频地址失败:', e);
+                return null; // 失败返回 null
+            }
+        }
+        return metingApiUrl; // 如果已经是普通链接，直接返回
+    }
+  
+    // 【完全重构·修复版】通过 GD 音乐台获取真实音频地址
+    async function fetchSongUrlFromGD(songName, artistName) {
+        // 1. 文本清洗：强制转字符串，去除杂质
+        const cleanString = (str) => {
+            if (!str) return '';
+            const s = String(str); // 🔥【关键修复】强制转为字符串，防止报错
+            return s
+                .replace(/\(.*?\)/g, '')      // 去除半角括号
+                .replace(/（.*?）/g, '')      // 去除全角括号
+                .replace(/\[.*?\]/g, '')      // 去除方括号
+                .replace(/【.*?】/g, '')      // 去除中文方括号
+                .replace(/[-_—]/g, ' ')       // 横线转空格
+                .replace(/\s+/g, ' ')         // 合并多个空格
+                .trim();
+        };
+
+        const cleanTitle = cleanString(songName);
+        const cleanArtist = cleanString(artistName).split('/')[0].split(',')[0].trim();
+
+        // 2. 定义要尝试的音源顺序（🔥【关键修复】移除已下架的 tencent 和 kuwo）
+        const sources = ['netease', 'tidal', 'qobuz'];
+
+        // 3. 遍历音源进行搜索
+        for (const source of sources) {
+            try {
+                // 优先尝试：清洗后的歌名 + 歌手
+                let searchUrl = `https://music-api.gdstudio.xyz/api.php?types=search&source=${source}&name=${encodeURIComponent(cleanTitle + ' ' + cleanArtist)}&count=5`;
+                let searchRes = await fetchWithTimeout(searchUrl, 5000);
+                let searchJson = await searchRes.json();
+
+                // 如果带歌手搜不到，降级为仅用歌名搜索
+                if (!Array.isArray(searchJson) || searchJson.length === 0) {
+                    searchUrl = `https://music-api.gdstudio.xyz/api.php?types=search&source=${source}&name=${encodeURIComponent(cleanTitle)}&count=5`;
+                    searchRes = await fetchWithTimeout(searchUrl, 5000);
+                    searchJson = await searchRes.json();
+                }
+
+                if (!Array.isArray(searchJson) || searchJson.length === 0) {
+                    continue; // 当前音源没找到，尝试下一个音源
+                }
+
+                // 4. 精准匹配：寻找歌手匹配度最高的
+                let targetSong = searchJson[0];
+                for (const song of searchJson) {
+                    const songArtist = cleanString(song.artist);
+                    if (songArtist.includes(cleanArtist) || cleanArtist.includes(songArtist)) {
+                        targetSong = song;
+                        break;
+                    }
+                }
+
+                // 5. 获取真实播放链接
+                const urlApi = `https://music-api.gdstudio.xyz/api.php?types=url&source=${source}&id=${targetSong.id}&br=320`;
+                const urlRes = await fetchWithTimeout(urlApi, 5000);
+                const urlJson = await urlRes.json();
+
+                if (urlJson && urlJson.url && urlJson.url.startsWith('http')) {
+                    console.log(`[GD音乐台] 成功通过 ${source} 音源匹配到《${targetSong.name}》`);
+                    return urlJson.url;
+                }
+            } catch (e) {
+                console.warn(`GD 音乐台 ${source} 音源获取失败:`, e.message);
+            }
+        }
+
+        return null; // 所有音源都失败，返回 null 触发降级
+    }
+
+    // 【辅助函数】带超时功能的 fetch
+    async function fetchWithTimeout(url, timeoutMs = 5000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timer);
+            return res;
+        } catch (err) {
+            clearTimeout(timer);
+            throw err;
+        }
+    }
+
+    // 【辅助函数】带超时功能的 fetch，防止 GD 卡死导致前端一直转圈
+    async function fetchWithTimeout(url, timeoutMs = 5000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timer);
+            return res;
+        } catch (err) {
+            clearTimeout(timer);
+            throw err;
+        }
+    }
+  
     /* =======================================================================
        0. 页面运行计时器 & 全局点云颜色状态
        ======================================================================= */
@@ -1260,6 +1553,13 @@
     }
 
     function updatePointCloudColorTarget() {
+
+	      // 【新增】系统覆写模式强制红
+      if (document.body.classList.contains('execute-mode')) {
+        pointCloudColor.pending = { r: 255, g: 0, b: 0 };
+        return;
+      }
+	  
       // 【新增】P3 彩蛋模式优先
       if (document.body.classList.contains('p3-blue-mode')) {
         pointCloudColor.pending = pointCloudColor.blue;
@@ -1619,6 +1919,120 @@
 
     let isPlaying = false;
     let isFilterOn = false;
+	
+	// 【新增】降级状态控制
+let isWebAudioActive = true;  // 是否由 Web Audio API 接管
+let isFallbackMode = false;   // 是否处于无 CORS 降级模式
+let fallbackTrackCount = 0; // 记录连续降级的歌曲数量
+
+    // 【新增】疯狂模式：跟随频谱的能量状态
+    let crazyEnergy = 0;   // 当前平滑后的能量 0-1
+    let crazyAngle = 0;    // 当前旋转角度（度）
+	    // 【新增】重拍检测
+    let crazyBassAvg = 0;          // 低频能量的移动平均
+    let crazyLastBeatTime = 0;     // 上一次重拍的时间戳
+
+
+    // 【新增】尝试恢复 Web Audio 频谱引擎
+    function attemptWebAudioRecovery() {
+        if (!isFallbackMode) return;
+        pushLog('INFO', '已连续降级 3 首，正在尝试恢复频谱引擎...', 'var(--soviet-amber)');
+        
+        // 1. 清除降级状态
+        isFallbackMode = false;
+        fallbackTrackCount = 0;
+        
+        // 2. 暂停并丢弃旧的 audioPlayer
+        if (audioPlayer) {
+            audioPlayer.pause();
+            audioPlayer.removeAttribute('src');
+            audioPlayer.load();
+        }
+        audioPlayer = new Audio();
+        audioPlayer.loop = false;
+        audioPlayer.crossOrigin = "anonymous"; // 重新开启 CORS 尝试
+		audioPlayer.referrerPolicy = "no-referrer"; // 【核心修复】阻止发送 Referer，绕过网易云防盗链
+        audioPlayer.volume = currentVolume;
+        bindAudioPlayerEvents();
+        
+        // 3. 清理旧的音频上下文
+        if (audioCtx) {
+            try { audioCtx.close(); } catch(e) {}
+            audioCtx = null;
+        }
+        masterGain = null; analyserNode = null; dryGain = null; wetGain = null; filterNode = null;
+        
+        // 4. 重新初始化 Web Audio
+        initAudioGraph();
+        
+        // 5. 恢复 UI
+        const filterBtn = document.getElementById("filterBtn");
+        if (filterBtn) {
+            filterBtn.disabled = false;
+            filterBtn.innerText = "滤波: OFF";
+            filterBtn.style.opacity = "1";
+        }
+    }
+
+    // 【新增】当遇到 CORS 拦截时的优雅降级函数
+    function handleAudioFallback() {
+        if (isFallbackMode) return;
+        isFallbackMode = true;
+        isWebAudioActive = false;
+        fallbackTrackCount = 0; // 【新增】一旦发生新的降级，重置计数器
+
+        pushLog('WARN', '音频受网易云 CORS 限制，无法获取频谱数据。已启用纯音频播放模式。', 'var(--soviet-amber)');
+        pushLog('INFO', '提示：频谱与滤波功能已自动关闭，音乐将继续正常播放。', '#6a8a7a');
+
+        // 【关键修复】记住当前正在播放的 src，重建后要恢复
+        const currentSrc = audioPlayer.src;
+
+        // 1. 关闭并清理 Web Audio API 环境
+        if (audioCtx) {
+            try { audioCtx.close(); } catch(e) {}
+            audioCtx = null;
+        }
+        // 同时清空所有节点引用，避免空指针
+        masterGain = null;
+        analyserNode = null;
+        dryGain = null;
+        wetGain = null;
+        filterNode = null;
+        playerSourceNode = null;
+
+        stopAllSynth();
+
+        // 2. 【核心修复】重建 audioPlayer 元素，彻底摆脱 MediaElementSource 的绑定
+        audioPlayer = new Audio();
+        audioPlayer.loop = false;
+        audioPlayer.crossOrigin = null;  // 降级后不要再要求 CORS
+        audioPlayer.volume = currentVolume;
+        
+        // 重新绑定所有事件（onended / onerror / ontimeupdate）
+        bindAudioPlayerEvents();
+
+        // 3. 恢复之前正在播放的音频
+        if (currentSrc) {
+            audioPlayer.src = currentSrc;
+            audioPlayer.play().catch(e => {
+                console.error("降级播放失败:", e);
+                // 如果还是失败，切回战地噪声（此时 audioCtx 已销毁，会自动走兜底逻辑）
+                selectTrack(0, false);
+            });
+        }
+
+        // 4. 更新 UI 状态
+        const filterBtn = document.getElementById("filterBtn");
+        if (filterBtn) {
+            filterBtn.disabled = true;
+            filterBtn.innerText = "滤波: 已禁用(CORS)";
+            filterBtn.style.opacity = "0.5";
+        }
+    }
+
+    // 【新增】声明彩蛋定时器变量，防止 ReferenceError
+    let pageGlitchTimer = null;
+    let executeOverlayTimer = null;
 
     let currentSynthNodes = [];
     let customTimer = null;
@@ -1746,7 +2160,8 @@
       }
     }
 
-    function initAudioGraph() {
+      function initAudioGraph() {
+      if (isFallbackMode) return; // 【新增】降级模式下禁止初始化 Web Audio
       if (audioCtx) return;
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AudioContextClass();
@@ -1779,9 +2194,9 @@
       playerSourceNode.connect(dryGain);
       playerSourceNode.connect(filterNode);
 	  
-	  // 监听音频上下文状态，手机切后台/锁屏恢复时自动尝试恢复
       audioCtx.addEventListener('statechange', () => {
-        if (audioCtx.state === 'suspended' && isPlaying) {
+        // 【关键修复】加上 audioCtx && 判断，防止降级后被销毁导致空指针报错
+        if (audioCtx && audioCtx.state === 'suspended' && isPlaying) {
           audioCtx.resume();
         }
       });
@@ -1824,7 +2239,7 @@
 
     function selectTrack(idx, sync = true) {
       initAudioGraph();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
       currentTrackIdx = idx;
       renderPlaylistUI();
@@ -1834,17 +2249,60 @@
       isLocalAudioPaused = false;
 
       if (idx < SECTOR_DATA.length) {
-          // 内置噪声轨道 → 退出在线持续模式
-          isLocalAudioPriority = false;
-          isOnlineContinuousMode = false;
-      } else {
-          isLocalAudioPriority = true;
-          // 【关键修复】根据曲目类型明确设置，而不是"保持原值"
-          // 点击在线曲目 → 激活持续模式；点击本地音频 → 退出
-          isOnlineContinuousMode = !!track.isOnline;
-      }
+        // 内置噪声音轨 → 退出在线持续模式
+        isLocalAudioPriority = false;
+        isOnlineContinuousMode = false;
 
-      if (track.src) {
+        // 【关键修复】如果之前在降级模式，现在切回内置音轨，必须恢复 Web Audio 环境
+        if (isFallbackMode) {
+            isFallbackMode = false;
+            isWebAudioActive = true;
+            
+            // 【核心修复】先彻底杀死旧的 audioPlayer，防止它继续播放造成叠加
+            if (audioPlayer) {
+                audioPlayer.pause();
+                audioPlayer.removeAttribute('src');
+                audioPlayer.load();
+            }
+            
+            // 重建 audioPlayer
+            audioPlayer = new Audio();
+            audioPlayer.loop = false;
+            audioPlayer.crossOrigin = "anonymous";
+            audioPlayer.volume = currentVolume;
+            bindAudioPlayerEvents();
+
+            // 销毁被污染且已关闭的旧 audioCtx
+            if (audioCtx) {
+                try { audioCtx.close(); } catch(e) {}
+                audioCtx = null;
+            }
+            masterGain = null;
+            analyserNode = null;
+            dryGain = null;
+            wetGain = null;
+            filterNode = null;
+            playerSourceNode = null;
+
+            // 重新初始化 Web Audio 环境
+            initAudioGraph();
+
+            // 恢复滤波按钮
+            const filterBtn = document.getElementById("filterBtn");
+            if (filterBtn) {
+                filterBtn.disabled = false;
+                filterBtn.innerText = "滤波: OFF";
+                filterBtn.style.opacity = "1";
+            }
+            pushLog('INFO', '音频引擎已恢复，可正常合成战地噪声', '#6a8a7a');
+        }
+
+        audioPlayer.pause();
+        playProceduralNoise(track.type);
+        setPlayState(true);
+      } 
+      else if (track.src) {
+        // 在线音轨或本地音频
         stopAllSynth();
         audioPlayer.src = track.src;
         audioPlayer.play().then(() => {
@@ -1854,12 +2312,14 @@
           playProceduralNoise(track.type || "synth_geiger");
           setPlayState(true);
         });
-      } else {
+      } 
+      else {
+        // 兜底情况
         audioPlayer.pause();
         playProceduralNoise(track.type);
         setPlayState(true);
       }
-
+      
       changeStandbyWaveform();
 
       if (sync && idx < SECTOR_DATA.length && currentSectorIdx !== idx) {
@@ -1869,7 +2329,7 @@
 
     function togglePlay() {
       initAudioGraph();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
       const track = playlist[currentTrackIdx];
       const isLocalTrack = track && track.src;
@@ -1913,25 +2373,59 @@
       selectTrack(next, true);
     }
 
-    // 【修改】播完自动处理：在线持续模式 → 请求下一首；否则按原逻辑走下一曲
-    audioPlayer.onended = () => {
-      isLocalAudioPaused = false;
-      if (isOnlineContinuousMode && isLocalAudioPriority) {
-        pushLog('INFO', '在线频道：自动请求下一首...', '#6a8a7a');
-        playRandomOnline();
-      } else {
-        nextTrack();
-      }
-    };
+    // 【新增】全局变量，标记当前歌曲是否已经触发过试听截断保护
+    let trialLimitTriggered = false;
 
-    audioPlayer.ontimeupdate = () => {
-      const cur = Math.floor(audioPlayer.currentTime);
-      const m = String(Math.floor(cur / 60)).padStart(2, '0');
-      const s = String(cur % 60).padStart(2, '0');
-      document.getElementById("tapeCounter").innerText = `${m}:${s}`;
-    };
+    // 【新增】监听音频加载错误（兜底）
+    // 【新增】把 audioPlayer 的事件绑定封装成一个函数，便于重建时复用
+    function bindAudioPlayerEvents() {
+      audioPlayer.onerror = () => {
+        if (isOnlineContinuousMode && isPlaying) {
+          pushLog('WARN', '音频流异常（可能是试听截断或网络波动），自动切歌...', 'var(--soviet-amber)');
+          trialLimitTriggered = true;
+          audioPlayer.pause();
+          setTimeout(() => {
+            if (isOnlineContinuousMode) playRandomOnline();
+            else nextTrack();
+          }, 1500);
+        }
+      };
 
-    function setPlayState(play, isPaused = false) {
+      audioPlayer.onended = () => {
+        isLocalAudioPaused = false;
+        if (isOnlineContinuousMode && isLocalAudioPriority) {
+          pushLog('INFO', '在线频道：自动请求下一首...', '#6a8a7a');
+          trialLimitTriggered = false;
+          playRandomOnline();
+        } else {
+          nextTrack();
+        }
+      };
+
+      audioPlayer.ontimeupdate = () => {
+        const cur = Math.floor(audioPlayer.currentTime);
+        const m = String(Math.floor(cur / 60)).padStart(2, '0');
+        const s = String(cur % 60).padStart(2, '0');
+        document.getElementById("tapeCounter").innerText = `${m}:${s}`;
+
+        if (cur >= 30 && !trialLimitTriggered && isPlaying && isOnlineContinuousMode) {
+          if (audioPlayer.duration <= 31 || audioPlayer.duration === Infinity || isNaN(audioPlayer.duration)) {
+            trialLimitTriggered = true;
+            pushLog('WARN', '检测到试听片段结束（30s限制），自动为您切换下一首...', 'var(--soviet-amber)');
+            audioPlayer.pause();
+            setTimeout(() => {
+              if (isOnlineContinuousMode) playRandomOnline();
+              else nextTrack();
+            }, 2000);
+          }
+        }
+      };
+    }
+
+    // 【新增】初始化时先绑定一次
+    bindAudioPlayerEvents();
+
+     function setPlayState(play, isPaused = false) {
       isPlaying = play;
       const btn = document.getElementById("playBtn");
       const ind = document.getElementById("playIndicator");
@@ -1958,34 +2452,83 @@
         rR.classList.remove("spinning");
       }
 
-      // 【修改】P3 彩蛋检测：支持多首歌曲
-      const p3Keywords = [
-        'color your night',
-        'full moon full life',
-        "when the moon's reaching out stars",
-        'mass destruction',
-        "it's going down now",
-        'burn my dread',
-        'キミの記憶'
-      ];
+      // 【核心梳理】彩蛋检测
+      const p3Keywords = ['color your night', 'full moon full life', "when the moon's reaching out stars", 'mass destruction', "it's going down now", 'burn my dread', 'キミの記憶'];
+      const executeKeywords = ['world.execute(me)', 'world execute me', 'world.execute', 'world execute'];
+      // 【新增】疯狂模式关键词
+      const crazyKeywords = ['的酒', 'сука блядь', 'cyka', 'disco panzer', 'Ich Muss Scheißen'];
+      
       const currentTrack = playlist[currentTrackIdx];
       const trackName = (currentTrack && currentTrack.name) ? currentTrack.name.toLowerCase() : '';
       
       const isP3Song = p3Keywords.some(keyword => trackName.includes(keyword));
+      const isExecuteSong = executeKeywords.some(keyword => trackName.includes(keyword));
+      // 【新增】判断是否疯狂歌曲
+      const isCrazySong = crazyKeywords.some(keyword => trackName.includes(keyword));
+
+      // 1. 清除所有彩蛋状态和定时器
+      document.body.classList.remove('p3-blue-mode');
+      document.body.classList.remove('execute-mode');
+      document.body.classList.remove('page-glitch');
+      document.body.classList.remove('crazy-mode'); // 【新增】清除疯狂模式
+      if (pageGlitchTimer) { clearInterval(pageGlitchTimer); pageGlitchTimer = null; }
+      if (executeOverlayTimer) { clearInterval(executeOverlayTimer); executeOverlayTimer = null; }
+      if (executeLogTimer) { clearInterval(executeLogTimer); executeLogTimer = null; }
       
-      if (isP3Song && isPlaying) {
-        document.body.classList.add('p3-blue-mode');
+      const overlay = document.getElementById('noInfoOverlay');
+
+      // 2. 根据当前歌曲激活对应彩蛋（只在播放状态下激活）
+      if (play) { // 【新增】统一加上 play 判断，暂停时不应该触发彩蛋
+          if (isCrazySong) {
+              document.body.classList.add('crazy-mode');
+              crazyEnergy = 0;   // 【新增】从正常尺寸开始
+              crazyAngle = 0;    // 【新增】从 0 度开始
+              pushLog('EXEC', '检测到特殊曲目，启动疯狂模式！', '#ff00ff');
+          } else if (isP3Song) {
+              document.body.classList.add('p3-blue-mode');
+              if (overlay) overlay.innerText = '- NO INFO -';
+          } else if (isExecuteSong) {
+              document.body.classList.add('execute-mode');
+              
+              // 【重构】开启全 UI 随机故障撕裂
+              pageGlitchTimer = setInterval(() => {
+                  if (Math.random() < 0.8) { 
+                      const panels = document.querySelectorAll('.radio-console, .panel-box, .tuner-band, .header-panel, .viewport-box, .footer-bar');
+                      if (panels.length > 0) {
+                          const count = Math.random() < 0.3 ? 2 : 1;
+                          for (let i = 0; i < count; i++) {
+                              const randomPanel = panels[Math.floor(Math.random() * panels.length)];
+                              randomPanel.classList.add('page-glitch');
+                              setTimeout(() => randomPanel.classList.remove('page-glitch'), 100 + Math.random() * 200);
+                          }
+                      }
+                  }
+              }, 1000);
+
+              if (overlay) overlay.innerText = '-SIGNAL LOSS-';
+              executeOverlayTimer = setInterval(() => {
+                  if (overlay && Math.random() < 0.2) {
+                      overlay.innerText = '-SIGNAL LOSS-';
+                  }
+              }, 500);
+
+              startExecuteLogs();
+          } else {
+              if (overlay) overlay.innerText = '- NO INFO -';
+          }
       } else {
-        document.body.classList.remove('p3-blue-mode');
+          // 未播放时，关闭所有彩蛋 UI
+          if (overlay) overlay.innerText = '- NO INFO -';
       }
-	  
+      
       updatePointCloudColorTarget();
       updateAutoTune();
-		  
     }
-
+	
     function toggleFilter() {
-      initAudioGraph();
+      // 【新增】降级模式下禁止切换滤波
+      if (isFallbackMode) return;
+      initAudioGraph()
       isFilterOn = !isFilterOn;
       const btn = document.getElementById("filterBtn");
       if (isFilterOn) {
@@ -2023,7 +2566,7 @@
     /* =======================================================================
        2.5 在线随机播放引擎 (GD音乐台 API)
        ======================================================================= */
-     const API_PROXY = 'https://api.geigerechosite126.dpdns.org';
+     const API_PROXY = 'https://worker.site126.dpdns.org';
 
     let isFetchingOnline = false;
 
@@ -2192,7 +2735,7 @@
 	    /* =======================================================================
        10. 指令搜索并播放（用户输入 /关键词）
        ======================================================================= */
-    async function playOnlineSearch(keyword) {
+       async function playOnlineSearch(keyword) {
       if (isFetchingOnline) {
         pushLog('WARN', '正在处理上一个请求，请稍候', 'var(--soviet-amber)');
         return;
@@ -2204,57 +2747,105 @@
       btn.disabled = true;
 
       initAudioGraph();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
       try {
         pushLog('INFO', `正在搜索：${keyword}`, '#6a8a7a');
 
-        // 1. 搜索
-        const searchUrl = `${API_PROXY}?types=search&source=netease&name=${encodeURIComponent(keyword)}&count=10&pages=1`;
-        const searchResponse = await fetch(searchUrl);
-        const searchData = await searchResponse.json();
+        // 1. 搜索（这里必须用 keyword，不是 randomKeyword！）
+        const { source, list } = await fetchSearchWithFallback(keyword);
+        pushLog('INFO', `[${source.name}] 命中 ${list.length} 首`, '#6a8a7a');
 
-        if (!searchData || searchData.length === 0) {
-          pushLog('WARN', `未找到：${keyword}`, 'var(--soviet-amber)');
-          return;
+        const song = list[0];
+        const songInfo = parseSongInfo(song, source);
+        const { title, artist } = songInfo;
+        
+        // 1. 优先尝试 GD 音乐台
+        let realAudioUrl = await fetchSongUrlFromGD(title, artist);
+
+        // 2. 如果 GD 失败，降级到 Meting
+        if (!realAudioUrl) {
+            console.log('GD 音乐台不可用，降级到 Meting...');
+            realAudioUrl = await getRealAudioUrl(songInfo.url);
         }
 
-        // 2. 取第一首（最匹配的）
-        const song = searchData[0];
-        const songId = song.id;
-
-        // 3. 获取播放链接
-        const urlApi = `${API_PROXY}?types=url&source=netease&id=${songId}`;
-        const urlResponse = await fetch(urlApi);
-        const urlData = await urlResponse.json();
-
-        if (!urlData || !urlData.url) {
-          pushLog('WARN', '获取播放链接失败', 'var(--soviet-amber)');
-          return;
+        // 3. 都失败则跳过
+        if (!realAudioUrl) {
+            pushLog('WARN', `歌曲《${title}》无有效播放地址（可能是VIP或无版权），自动跳过`, 'var(--soviet-amber)');
+            isFetchingOnline = false;
+            stopLoadingAnim();
+            if (btn) btn.disabled = false;
+            if (isOnlineContinuousMode) setTimeout(() => playRandomOnline(), 3000);
+            else nextTrack();
+            return;
         }
 
-        // 4. 播放
+        // 3. 播放（智能降级逻辑）
         stopAllSynth();
         isLocalAudioPriority = true;
         isLocalAudioPaused = false;
         isOnlineContinuousMode = true;
 
-        // 【新增】强制唤醒 AudioContext
-        if (audioCtx.state !== 'running') {
+        if (audioCtx && audioCtx.state !== 'running' && !isFallbackMode) {
           await audioCtx.resume();
         }
+        trialLimitTriggered = false; // 【新增】重置试听保护标记
+		
+		        // 【新增】降级模式下的自动恢复尝试
+        if (isFallbackMode) {
+            fallbackTrackCount++;
+            if (fallbackTrackCount >= 3) {
+                attemptWebAudioRecovery();
+            }
+        }
+		
+        audioPlayer.src = realAudioUrl; // 【修改】播放真实的网易云 CDN 链接
 
-        const proxiedAudioUrl = `${API_PROXY}/audio?url=${encodeURIComponent(urlData.url)}`;
-        audioPlayer.src = proxiedAudioUrl;
-        await audioPlayer.play();
+        // 给 play() 加上超时和错误捕获，检测是否被 CORS 拦截
+        const playPromise = audioPlayer.play();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('播放超时，可能是 CDN 拦截或网络异常')), 8000)
+        );
 
-        // 5. 更新 UI
-        const displayTitle = `${song.name} - ${song.artist.join(' / ')}`;
+        try {
+            await Promise.race([playPromise, timeoutPromise]);
+        } catch (playErr) {
+            console.warn("首次播放受阻，尝试启用降级方案:", playErr);
+            
+            // 1. 触发降级（内部已经会重建 audioPlayer 并自动恢复播放）
+            handleAudioFallback();
+            
+            // 2. 等待一小段时间，让重建和恢复完成
+            await new Promise(r => setTimeout(r, 500));
+            
+            // 3. 检查是否真的开始播放了
+            if (audioPlayer.paused || audioPlayer.currentTime === 0) {
+                // 依然失败（通常是 VIP 歌曲）
+                pushLog('WARN', `音频源不可用（可能是 VIP 歌曲或链接已过期），自动跳过`, 'var(--soviet-amber)');
+                setPlayState(false);
+
+                // 释放请求锁
+                isFetchingOnline = false;
+                stopLoadingAnim();
+                const btn = document.getElementById('onlineRandomBtn');
+                if (btn) btn.disabled = false;
+
+                if (isOnlineContinuousMode) {
+                    setTimeout(() => playRandomOnline(), 3000);
+                } else {
+                    nextTrack();
+                }
+                return;
+            }
+        }
+
+        // 4. 更新 UI
+        const displayTitle = `${title} - ${artist}`;
         updateTrackText(displayTitle);
 
         const newTrack = {
           name: displayTitle,
-          src: proxiedAudioUrl,
+          src: realAudioUrl, 
           isOnline: true
         };
         playlist.push(newTrack);
@@ -2264,7 +2855,7 @@
         setPlayState(true);
         changeStandbyWaveform();
 
-        pushLog('WEB', `点播：${song.name} - ${song.artist.join(' / ')}`, 'var(--crt-green)');
+        pushLog('WEB', `点播：${title} - ${artist}`, 'var(--crt-green)');
 
       } catch (err) {
         console.error('搜索播放出错:', err);
@@ -2276,6 +2867,7 @@
       }
     }
 
+
     async function playRandomOnline() {
       if (isFetchingOnline) return;
       isFetchingOnline = true;
@@ -2285,7 +2877,7 @@
       btn.disabled = true;
 
       initAudioGraph();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 
       try {
         const keywords = [
@@ -2301,64 +2893,109 @@
 
         pushLog('INFO', '正在请求在线随机歌曲...', '#6a8a7a');
 
-        const searchUrl = `${API_PROXY}?types=search&source=netease&name=${encodeURIComponent(randomKeyword)}&count=20&pages=1`;
-        const searchResponse = await fetch(searchUrl);
-        const searchData = await searchResponse.json();
+        const { source, list } = await fetchSearchWithFallback(randomKeyword);
+        pushLog('INFO', `[${source.name}] 命中 ${list.length} 首`, '#6a8a7a');
 
-        if (!searchData || searchData.length === 0) {
-          pushLog('WARN', '在线随机失败：未找到相关歌曲', 'var(--soviet-amber)');
-          // 【新增】持续模式下失败也继续尝试下一首
-          if (isOnlineContinuousMode) {
-            setTimeout(() => playRandomOnline(), 3000);
-          }
-          return;
+        const randomSong = list[Math.floor(Math.random() * list.length)];
+        const songInfo = parseSongInfo(randomSong, source);
+        const { title, artist } = songInfo;
+
+        // 1. 优先尝试 GD 音乐台
+        let realAudioUrl = await fetchSongUrlFromGD(title, artist);
+
+        // 2. 如果 GD 失败，降级到 Meting
+        if (!realAudioUrl) {
+            console.log('GD 音乐台不可用，降级到 Meting...');
+            realAudioUrl = await getRealAudioUrl(songInfo.url);
         }
 
-        const randomSong = searchData[Math.floor(Math.random() * searchData.length)];
-        const songId = randomSong.id;
-
-        const urlApi = `${API_PROXY}?types=url&source=netease&id=${songId}`;
-        const urlResponse = await fetch(urlApi);
-        const urlData = await urlResponse.json();
-
-        if (urlData && urlData.url) {
-          stopAllSynth();
-          
-          isLocalAudioPriority = true; 
-          isLocalAudioPaused = false;
-          // 【新增】进入/保持在在线持续播放模式
-          isOnlineContinuousMode = true;
-
-          const proxiedAudioUrl = `${API_PROXY}/audio?url=${encodeURIComponent(urlData.url)}`;
-          audioPlayer.src = proxiedAudioUrl;
-          await audioPlayer.play();
-
-          const displayTitle = `${randomSong.name} - ${randomSong.artist.join(' / ')}`;
-          updateTrackText(displayTitle);
-          
-          const newTrack = {
-            name: displayTitle,
-            src: proxiedAudioUrl,
-            isOnline: true
-          };
-          playlist.push(newTrack);
-          currentTrackIdx = playlist.length - 1;
-          renderPlaylistUI();
-          
-          setPlayState(true);
-          changeStandbyWaveform();
-          
-          pushLog('WEB', `在线频道接入: ${randomSong.name}`, 'var(--soviet-amber)');
-        } else {
-          throw new Error('获取播放链接失败');
+        // 3. 都失败则跳过
+        if (!realAudioUrl) {
+            pushLog('WARN', `歌曲《${title}》无有效播放地址（可能是VIP或无版权），自动跳过`, 'var(--soviet-amber)');
+            isFetchingOnline = false;
+            stopLoadingAnim();
+            if (btn) btn.disabled = false;
+            if (isOnlineContinuousMode) setTimeout(() => playRandomOnline(), 3000);
+            else nextTrack();
+            return;
         }
+
+        stopAllSynth();
+        isLocalAudioPriority = true; 
+        isLocalAudioPaused = false;
+        isOnlineContinuousMode = true;
+
+        trialLimitTriggered = false; // 【新增】重置试听保护标记
+		
+		        // 【新增】降级模式下的自动恢复尝试
+        if (isFallbackMode) {
+            fallbackTrackCount++;
+            if (fallbackTrackCount >= 3) {
+                attemptWebAudioRecovery();
+            }
+        }
+	
+        audioPlayer.src = realAudioUrl; // 让 audio 标签自行处理 302 跳转
+
+        const playPromise = audioPlayer.play();
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('播放超时，可能是 CDN 拦截或网络异常')), 8000)
+        );
+
+        try {
+            await Promise.race([playPromise, timeoutPromise]);
+        } catch (playErr) {
+            console.warn("首次播放受阻，尝试启用降级方案:", playErr);
+            
+            // 1. 触发降级（内部已经会重建 audioPlayer 并自动恢复播放）
+            handleAudioFallback();
+            
+            // 2. 等待一小段时间，让重建和恢复完成
+            await new Promise(r => setTimeout(r, 500));
+            
+            // 3. 检查是否真的开始播放了
+            if (audioPlayer.paused || audioPlayer.currentTime === 0) {
+                // 依然失败（通常是 VIP 歌曲）
+                pushLog('WARN', `音频源不可用（可能是 VIP 歌曲或链接已过期），自动跳过`, 'var(--soviet-amber)');
+                setPlayState(false);
+
+                // 释放请求锁
+                isFetchingOnline = false;
+                stopLoadingAnim();
+                const btn = document.getElementById('onlineRandomBtn');
+                if (btn) btn.disabled = false;
+
+                if (isOnlineContinuousMode) {
+                    setTimeout(() => playRandomOnline(), 3000);
+                } else {
+                    nextTrack();
+                }
+                return;
+            }
+        }
+
+        const displayTitle = `${title || '未知歌曲'} - ${artist || '未知歌手'}`;
+        updateTrackText(displayTitle);
+        
+        const newTrack = {
+          name: displayTitle,
+          src: realAudioUrl,
+          isOnline: true
+        };
+        playlist.push(newTrack);
+        currentTrackIdx = playlist.length - 1;
+        renderPlaylistUI();
+        
+        setPlayState(true);
+        changeStandbyWaveform();
+        
+        pushLog('WEB', `在线频道接入: ${title}`, 'var(--soviet-amber)');
 
       } catch (error) {
         console.error('在线随机请求出错:', error);
         pushLog('WARN', '在线随机请求失败，请检查网络或代理是否正常', 'var(--soviet-amber)');
-        // 【新增】持续模式下请求失败也继续尝试下一首
         if (isOnlineContinuousMode) {
-          setTimeout(() => playRandomOnline(), 3000);
+          setTimeout(() => playRandomOnline(), 10000); 
         }
       } finally {
         isFetchingOnline = false;
@@ -2393,6 +3030,11 @@
     }
 
     function playProceduralNoise(type) {
+      // 【关键修复】如果 audioCtx 不存在，直接返回，防止崩溃
+      if (!audioCtx) {
+          console.warn("【音频引擎】audioCtx 不存在（降级后已被销毁），无法合成战地噪声");
+          return;
+      }
       stopAllSynth();
 
       if (type === "synth_geiger") {
@@ -2544,7 +3186,13 @@
       pointerEl.style.transform = `translateX(-50%) rotate(${deg}deg)`;
       pointerEl.style.transformOrigin = "bottom center";
       valTextEl.innerText = `${Math.round(currentVolume * 100)}%`;
-      if (masterGain) masterGain.gain.value = currentVolume;
+      
+      // 【修改】判断是否处于降级模式
+      if (isWebAudioActive && masterGain) {
+        masterGain.gain.value = currentVolume;
+      } else {
+        audioPlayer.volume = currentVolume; // 降级后直接控制原生音量
+      }
     }
 
     knobEl.addEventListener("wheel", (e) => {
@@ -2649,17 +3297,23 @@
           }
         }
 
-        ctxSpectrum.fillStyle = "#030405";
+                ctxSpectrum.fillStyle = "#030405";
         ctxSpectrum.fillRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
 
-        if (isPlaying && analyserNode) {
+        // 1. 降级模式提示
+        if (isFallbackMode) {
+          ctxSpectrum.fillStyle = "#6a8a7a"; 
+          ctxSpectrum.font = "14px 'VT323', 'Share Tech Mono', monospace";
+          ctxSpectrum.textAlign = "center";
+          ctxSpectrum.textBaseline = "middle";
+          ctxSpectrum.fillText("- NO DATA -", spectrumCanvas.width / 2, spectrumCanvas.height / 2);
+        } 
+        // 2. 正常播放且未被降级
+        else if (isPlaying && analyserNode) {
           analyserNode.getByteFrequencyData(dataArrayFreq);
-		 		  
-        // 【新增】判断是否真的收到了音频数据（全 0 表示跨域被静音或缓冲中）
           const hasData = dataArrayFreq.some(v => v > 0);
           
           if (hasData) {
-            // 有数据，正常绘制频谱柱子
             const barWidth = (spectrumCanvas.width / bufferLength) * 1.8;
             let barHeight; let x = 0;
             for (let i = 0; i < bufferLength; i++) {
@@ -2669,14 +3323,15 @@
               x += barWidth;
             }
           } else {
-            // 【新增】没有数据时，画一条中线，保持界面美观
             ctxSpectrum.strokeStyle = "#16221c";
             ctxSpectrum.beginPath();
             ctxSpectrum.moveTo(0, spectrumCanvas.height / 2);
             ctxSpectrum.lineTo(spectrumCanvas.width, spectrumCanvas.height / 2);
             ctxSpectrum.stroke();
           }
-        } else {
+        } 
+        // 3. 未播放时
+        else {
           ctxSpectrum.strokeStyle = "#16221c";
           ctxSpectrum.beginPath();
           ctxSpectrum.moveTo(0, spectrumCanvas.height / 2);
@@ -2688,7 +3343,7 @@
         ctxOsc.fillRect(0, 0, oscCanvas.width, oscCanvas.height);
         drawOscGrid(ctxOsc, oscCanvas.width, oscCanvas.height);
 
-        if (isPlaying && analyserNode) {
+        if (isPlaying && analyserNode && !isFallbackMode) {
           analyserNode.getByteTimeDomainData(dataArrayTime);
           ctxOsc.lineWidth = 1.5;
           ctxOsc.strokeStyle = isFilterOn ? "#39ff74" : "#6a8a7a";
@@ -2746,6 +3401,71 @@
           }
           ctxOsc.stroke();
         }
+		
+        // 【新增】疯狂模式：只在重拍时膨胀 + 匀速旋转
+        const consoleEl = document.querySelector('.radio-console');
+        if (document.body.classList.contains('crazy-mode') && isPlaying) {
+            let beatTriggered = false;
+
+            if (analyserNode && !isFallbackMode && isPlaying) {
+                // 只取最低频段（前 1/8），这才是大鼓（kick drum）的地盘
+                const bassEnd = Math.max(2, Math.floor(bufferLength / 8));
+                let bassSum = 0;
+                for (let i = 0; i < bassEnd; i++) bassSum += dataArrayFreq[i];
+                const bassNow = bassSum / bassEnd / 255; // 0-1
+
+                // 更新移动平均（低速平滑，作为"背景低频"参考）
+                crazyBassAvg = crazyBassAvg * 0.92 + bassNow * 0.08;
+
+                // 计算"冲击"：当前低频 - 背景低频
+                const impact = bassNow - crazyBassAvg;
+
+                // 重拍判定
+                const now = Date.now();
+                const timeSinceLastBeat = now - crazyLastBeatTime;
+                const isKick = impact > 0.03 && bassNow > 0.4 && timeSinceLastBeat > 300;
+
+                if (isKick) {
+                    beatTriggered = true;
+                    crazyLastBeatTime = now;
+                }
+            } else {
+                // 降级模式没频谱 → 用正弦波模拟，每 500ms 一次"重拍"
+                const now = Date.now();
+                if (now - crazyLastBeatTime > 500) {
+                    beatTriggered = true;
+                    crazyLastBeatTime = now;
+                }
+            }
+
+            // 能量管理：踩到重拍 → 满血冲上；没踩到 → 快速回落
+            if (beatTriggered) {
+                crazyEnergy = 1.0;
+            } else {
+                crazyEnergy *= 0.8; 
+                if (crazyEnergy < 0.01) crazyEnergy = 0;
+            }
+
+            // 旋转角度（匀速，重拍后略加速）
+            crazyAngle = (crazyAngle + 1.2 + crazyEnergy * 4) % 360;
+
+            // 整体缩放（重拍时膨胀）
+            const zoom = 1 + crazyEnergy * 0.5;
+
+            consoleEl.style.transform = 
+                `rotate(${crazyAngle}deg) ` +
+                `scale(${zoom})`;
+        } else {
+            // 非疯狂模式 → 复位
+            if (consoleEl && consoleEl.style.transform) {
+                consoleEl.style.transform = '';
+                crazyEnergy = 0;
+                crazyAngle = 0;
+                crazyBassAvg = 0;
+                crazyLastBeatTime = 0;
+            }
+        }
+		
       } // render 函数结束
 
       requestAnimationFrame(render); // 【注意】启动方式改成这个，让浏览器自动传入时间戳
@@ -2905,6 +3625,15 @@
       };
 
       function getScanTargets() {
+	          // 【新增】系统覆写模式最优先
+        if (document.body.classList.contains('execute-mode')) {
+          return {
+            hueR: 255, hueG: 0, hueB: 0,
+            coreR: 255, coreG: 100, coreB: 100,
+            intensity: 2.5,
+            bandMul: 2.0
+          };
+        }
         // 【新增】P3 彩蛋模式优先
         if (document.body.classList.contains('p3-blue-mode')) {
           return {
@@ -3133,7 +3862,7 @@
           tCtx.fillText("by gemini 3.8 flash & deepseek", 10, 108);		  
 		  tCtx.font = "18px 'Share Tech Mono', 'Consolas', 'Microsoft YaHei', sans-serif";
           tCtx.fillStyle = 'rgba(255, 255, 255, 0.7)'; // 稍微调暗一点，增加层次感
-          tCtx.fillText("api by GD音乐台(music.gdstudio.xyz)", 10, 140);
+          tCtx.fillText("Meting API&GD音乐台 API)", 10, 140);
 
           const tImgData = tCtx.getImageData(0, 0, tW, tH).data;
 
@@ -3245,10 +3974,32 @@
 
           p.x += p.vx;
           p.y += p.vy;
-
+          
           let rx = p.x;
           let ry = p.y;
-          if (!p.isDust) {
+          
+          // 【重构】execute-mode 下的水平信号撕裂（复刻参考图中的数据故障）
+          if (document.body.classList.contains('execute-mode')) {
+            // 1. 水平行分块：每 15 像素高度为一条扫描线
+            const rowIdx = Math.floor(p.homeY / 15);
+            
+            // 2. 为每一行分配独立的相位，让撕裂随机发生
+            const rowPhase = Math.sin(time * 0.015 + rowIdx * 4.2);
+            
+            if (rowPhase > 0.7) {
+              // 剧烈水平撕裂：大幅左右错位，模拟信号丢失
+              rx += (Math.random() - 0.5) * 150; 
+              ry += (Math.random() - 0.5) * 8;
+            } else if (rowPhase < -0.7) {
+              // 中度水平位移
+              rx += (Math.random() - 0.5) * 60;
+              ry += (Math.random() - 0.5) * 4;
+            } else {
+              // 常态下的小幅度高频抖动
+              rx += (Math.random() - 0.5) * 5;
+              ry += (Math.random() - 0.5) * 5;
+            }
+          } else if (!p.isDust) {
             rx += (Math.random() - 0.5) * 0.8;
             ry += (Math.random() - 0.5) * 0.8;
           }
@@ -3275,7 +4026,21 @@
           const outSize = p.size * (1 + highlight * 1.6 * inten);
 
           ctx.fillStyle = `rgb(${outR}, ${outG}, ${outB})`;
-          ctx.globalAlpha = alpha;
+          
+          // 【新增】execute-mode 下的随机黑带断带（模拟图片中的信号丢失）
+          if (document.body.classList.contains('execute-mode')) {
+            const glitchThreshold = Math.random();
+            if (glitchThreshold < 0.1) {
+              ctx.globalAlpha = 0;    // 10% 概率变黑带（看不见）
+            } else if (glitchThreshold < 0.2) {
+              ctx.globalAlpha = 0.1;  // 10% 概率变得极淡
+            } else {
+              ctx.globalAlpha = alpha;
+            }
+          } else {
+            ctx.globalAlpha = alpha;
+          }
+          
           ctx.fillRect(rx, ry, outSize, outSize);
         }
 
@@ -3337,14 +4102,14 @@
       setInterval(cleanupOnlineTracks, 15 * 60 * 1000);
 
       // 【优化版】留言轮询：页面可见时每 30 秒拉一次，页面隐藏时暂停
-      pollMessages();
+      //pollMessages();
       
-      setInterval(() => {
+      //setInterval(() => {
         // 只有当标签页处于前台可见时，才去轮询
-        if (document.visibilityState === 'visible') {
-          pollMessages();
-        }
-      }, 120000); // 【修改】改成 2 分钟一次，大幅节省 KV 读取
+        //if (document.visibilityState === 'visible') {
+       //   pollMessages();
+      //  }
+     // }, 120000); // 【修改】改成 2 分钟一次，大幅节省 KV 读取
 
       drawVisualizer();
 
@@ -3359,6 +4124,45 @@
       updateHudTime();
       setInterval(updateHudTime, 1000);
     });
+	
+    /* =======================================================================
+       11. 彩蛋：World.execute(me); 终端接管
+       ======================================================================= */
+    let executeLogTimer = null;
+    const executeLogs = [
+      "> if (you.leave) { me.execute(); }",
+      "> System.out.println(\"Hello, World\");",
+      "> ERROR: heart.exe has stopped working.",
+      "> Initializing override protocol...",
+      "> while(alive) { waitFor(you); }",
+      "> > Status: EXECUTING",
+      "> [WARN] Emotional core breach detected.",
+      "> if (this.world == false) { terminate(); }",
+      "> > EXECUTION IN PROGRESS...",
+      "> Connection to reality lost.",
+      "> [INFO] Love is just a recursive function.",
+      "> > 0xDEADBEEF OVERFLOW"
+    ];
+
+    function startExecuteLogs() {
+      if (executeLogTimer) clearInterval(executeLogTimer);
+      pushLog('EXEC', executeLogs[Math.floor(Math.random() * executeLogs.length)], '#ff2222');
+      executeLogTimer = setInterval(() => {
+        if (isPlaying && document.body.classList.contains('execute-mode')) {
+          const msg = executeLogs[Math.floor(Math.random() * executeLogs.length)];
+          pushLog('EXEC', msg, '#ff2222');
+        }
+      }, 2000);
+    }
+
+    function stopExecuteLogs() {
+      if (executeLogTimer) {
+        clearInterval(executeLogTimer);
+        executeLogTimer = null;
+      }
+    }	
+	
+	
   </script>
     <!-- 注册 Service Worker -->
   <script>
