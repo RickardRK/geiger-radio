@@ -1,3 +1,6 @@
+//弃用，被克劳德福莱尔干穿的主要原因
+
+
 // ==================== 主 Worker ====================
 export default {
   async fetch(request, env, ctx) {
